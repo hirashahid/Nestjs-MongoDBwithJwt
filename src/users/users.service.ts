@@ -14,8 +14,8 @@ export class UsersServices {
     private users: User[] = [];
 
     constructor(
-        @InjectModel('User') private readonly userModel: Model<User>
-        , private jwtService: JwtService,
+        @InjectModel('User') private readonly userModel: Model<User>,
+        private jwtService: JwtService,
     ) { }
 
     async insertUser(email: string, password: string) {
@@ -23,9 +23,7 @@ export class UsersServices {
             email,
             password,
         });
-        // SAVE() provided by mongoose to save the data, and it returns promise
         const user = await newUser.save();
-        // result contains the whole object having all product properties.
         return user.id as string;
 
     }
