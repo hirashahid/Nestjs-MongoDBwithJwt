@@ -8,7 +8,7 @@ import * as bcrypt from 'bcrypt';
 export class UsersController {
     constructor(private readonly usersService: UsersServices) { }
 
-    @Post()
+    @Post('register')
     async addUser(
         @Body('email') userEmail: string,
         @Body('password') userPassword: string,
@@ -27,24 +27,24 @@ export class UsersController {
         return await this.usersService.getUsers();
     }
 
-    @Get(':id')
-    getUser(@Param('id') userId: string) {
-        return this.usersService.getSingleUser(userId);
+    @Get(':email')
+    getUser(@Param('email') userEmail: string) {
+        return this.usersService.getSingleUser(userEmail);
     }
 
-    @Patch(':id')
+    @Patch(':email')
     async updateUser(
-        @Param('id') userId: string,
+        @Param('email') Email: string,
         @Body('email') userEmail: string,
         @Body('password') userPassword: string,
     ) {
-        await this.usersService.updateUser(userId, userEmail, userPassword);
+        await this.usersService.updateUser(Email, userEmail, userPassword);
         return null;
     }
 
-    @Delete(':id')
-    async deleteProduct(@Param('id') userId: string,) {
-        await this.usersService.deleteUser(userId);
+    @Delete(':email')
+    async deleteProduct(@Param('email') userEmail: string,) {
+        await this.usersService.deleteUser(userEmail);
         return null;
     }
 

@@ -32,8 +32,8 @@ export class UsersServices {
         }));
     }
 
-    async getSingleUser(userId: string) {
-        const user = await this.findUser(userId);
+    async getSingleUser(email: string) {
+        const user = await this.findUser(email);
         return {
             id: user.id,
             email: user.email,
@@ -41,8 +41,8 @@ export class UsersServices {
         }
     }
 
-    async updateUser(userId: string, email: string, password: string) {
-        const updatedUser = await this.findUser(userId);
+    async updateUser(userEmail: string, email: string, password: string) {
+        const updatedUser = await this.findUser(userEmail);
         if (email) {
             updatedUser.email = email;
         }
@@ -52,17 +52,17 @@ export class UsersServices {
         updatedUser.save();
     }
 
-    async deleteUser(userId: string) {
-        const result = await this.userModel.deleteOne({ _id: userId }).exec();
+    async deleteUser(userEmail: string) {
+        const result = await this.userModel.deleteOne({ email: userEmail }).exec();
         if (result.deletedCount === 0) {
             throw new NotFoundException('Could not find user');
         }
     }
 
-    private async findUser(id: string): Promise<User> {
+    private async findUser(email: string): Promise<User> {
         let user;
         try {
-            user = await this.userModel.findById(id).exec();
+            user = await this.userModel.findOne({ email }).exec();
         } catch (error) {
             throw new NotFoundException('Could not find user');
         }
