@@ -27,14 +27,14 @@ export class UsersController {
         return await this.usersService.getUsers();
     }
 
-    @Get(':email')
-    getUser(@Param('email') userEmail: string) {
-        return this.usersService.getSingleUser(userEmail);
+    @Get('/login/')
+    getUser(@Body('email') userEmail: string, @Body('password') userPassword) {
+        return this.usersService.getSingleUser(userEmail, userPassword);
     }
 
     @Patch(':email')
     async updateUser(
-        @Param('email') Email: string,
+        @Body('email') Email: string,
         @Body('email') userEmail: string,
         @Body('password') userPassword: string,
     ) {
@@ -43,7 +43,7 @@ export class UsersController {
     }
 
     @Delete(':email')
-    async deleteProduct(@Param('email') userEmail: string,) {
+    async deleteProduct(@Body('email') userEmail: string, @Body('password') userPassword: string) {
         await this.usersService.deleteUser(userEmail);
         return null;
     }

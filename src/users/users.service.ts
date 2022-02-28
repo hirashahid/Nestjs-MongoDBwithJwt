@@ -4,6 +4,8 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from 'mongoose'
 import { User } from "./user.model";
 
+import * as bcrypt from 'bcrypt';
+
 @Injectable()
 export class UsersServices {
     private users: User[] = [];
@@ -32,8 +34,8 @@ export class UsersServices {
         }));
     }
 
-    async getSingleUser(email: string) {
-        const user = await this.findUser(email);
+    async getSingleUser(email: string, password: string) {
+        const user = await this.findUser(email, password);
         return {
             id: user.id,
             email: user.email,
@@ -42,7 +44,7 @@ export class UsersServices {
     }
 
     async updateUser(userEmail: string, email: string, password: string) {
-        const updatedUser = await this.findUser(userEmail);
+        const updatedUser = await this.findUser(userEmail, password);
         if (email) {
             updatedUser.email = email;
         }
@@ -59,10 +61,13 @@ export class UsersServices {
         }
     }
 
-    private async findUser(email: string): Promise<User> {
+    private async findUser(email: string, password: string): Promise<User> {
         let user;
         try {
             user = await this.userModel.findOne({ email }).exec();
+            if (!await bcrypt.compare(password, user.password)) {
+                throw new NotFoundException('Could not find user');
+            }
         } catch (error) {
             throw new NotFoundException('Could not find user');
         }
