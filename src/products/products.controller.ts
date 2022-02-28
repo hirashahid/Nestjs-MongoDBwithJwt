@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, Param, Patch, Delete } from "@nestjs/common";
 import { ProductServices } from "./products.service";
 
+import * as bcrypt from 'bcrypt';
 
 @Controller('products')
 export class ProductsController {
@@ -13,11 +14,13 @@ export class ProductsController {
         @Body('price') prodPrice: number,
     ) {
         // insertProduct also returning a promise
+        const hashedTitle = await bcrypt.hash(prodTitle, 12);
         const generatedId = await this.productsService.insertProduct(
-            prodTitle,
+            hashedTitle,
             prodDesc,
             prodPrice,
         );
+
         return { id: generatedId };
     }
 
