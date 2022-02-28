@@ -4,13 +4,19 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from 'mongoose'
 import { User } from "./user.model";
 
+
+import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { access } from "fs";
 
 @Injectable()
 export class UsersServices {
     private users: User[] = [];
 
-    constructor(@InjectModel('User') private readonly userModel: Model<User>) { }
+    constructor(
+        @InjectModel('User') private readonly userModel: Model<User>
+        , private jwtService: JwtService,
+    ) { }
 
     async insertUser(email: string, password: string) {
         const newUser = new this.userModel({
@@ -21,6 +27,7 @@ export class UsersServices {
         const user = await newUser.save();
         // result contains the whole object having all product properties.
         return user.id as string;
+
     }
 
     async getUsers(): Promise<any> {
@@ -34,23 +41,19 @@ export class UsersServices {
         }));
     }
 
-    async getSingleUser(email: string, password: string) {
+    async getSingleUser(email: string, password: string, response: Response) {
         const user = await this.findUser(email, password);
+        //const jwt = await this.jwtService.signAsync({ id: user.id });
+        const payload = { email: user.email, sub: user.id };
         return {
             id: user.id,
             email: user.email,
-            password: user.password,
+            access_token: this.jwtService.sign(payload),
         }
     }
 
-    async updateUser(userEmail: string, email: string, password: string) {
-        const updatedUser = await this.findUser(userEmail, password);
-        if (email) {
-            updatedUser.email = email;
-        }
-        if (password) {
-            updatedUser.password = password;
-        }
+    async updateUser(userEmail: string, password: string) {
+        const updatedUser = await this.updateSingleUser(userEmail, password);
         updatedUser.save();
     }
 
@@ -61,12 +64,13 @@ export class UsersServices {
         }
     }
 
-    private async findUser(email: string, password: string): Promise<User> {
+    private async updateSingleUser(email: string, password: string): Promise<User> {
         let user;
         try {
             user = await this.userModel.findOne({ email }).exec();
-            if (!await bcrypt.compare(password, user.password)) {
-                throw new NotFoundException('Could not find user');
+            if (password) {
+                const hashedPassword = await bcrypt.hash(password, 12);
+                user.password = hashedPassword;
             }
         } catch (error) {
             throw new NotFoundException('Could not find user');
@@ -74,6 +78,24 @@ export class UsersServices {
         if (!user) {
             throw new NotFoundException('Could not find user');
         }
+        return user;
+    }
+
+
+    private async findUser(email: string, password: string): Promise<User> {
+        let user;
+        try {
+            user = await this.userModel.findOne({ email }).exec();
+            if (!await bcrypt.compare(password, user.password)) {
+                throw new NotFoundException('Password incorrect');
+            }
+        } catch (error) {
+            throw new NotFoundException('Could not find user');
+        }
+        if (!user) {
+            throw new NotFoundException('Could not find user');
+        }
+
         return user;
     }
 }
