@@ -7,7 +7,6 @@ import { User } from "./user.model";
 
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { access } from "fs";
 
 @Injectable()
 export class UsersServices {
@@ -73,9 +72,6 @@ export class UsersServices {
         } catch (error) {
             throw new NotFoundException('Could not find user');
         }
-        if (!user) {
-            throw new NotFoundException('Could not find user');
-        }
         return user;
     }
 
@@ -90,9 +86,9 @@ export class UsersServices {
         } catch (error) {
             throw new NotFoundException('Could not find user');
         }
-        if (!user) {
-            throw new NotFoundException('Could not find user');
-        }
+        /* if (!user) {
+      throw new NotFoundException('Could not find user');
+       } */
 
         return user;
     }
