@@ -1,17 +1,13 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from 'mongoose'
 import { User } from "./user.model";
-
-
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersServices {
     private users: User[] = [];
-
     constructor(
         @InjectModel('User') private readonly userModel: Model<User>,
         private jwtService: JwtService,
@@ -28,8 +24,6 @@ export class UsersServices {
     }
 
     async getUsers(): Promise<any> {
-        //find() use to find the data
-        //exec(), gives a real promise
         const users = await this.userModel.find().exec();
         return users.map((user) => ({
             id: user.id,
@@ -38,7 +32,7 @@ export class UsersServices {
         }));
     }
 
-    async getSingleUser(email: string, password: string, response: Response) {
+    async getSingleUser(email: string, password: string) {
         const user = await this.findUser(email, password);
         //const jwt = await this.jwtService.signAsync({ id: user.id });
         const payload = { email: user.email, sub: user.id };
@@ -76,7 +70,7 @@ export class UsersServices {
     }
 
 
-    private async findUser(email: string, password: string): Promise<User> {
+    async findUser(email: string, password: string): Promise<User> {
         let user;
         try {
             user = await this.userModel.findOne({ email }).exec();
@@ -86,10 +80,6 @@ export class UsersServices {
         } catch (error) {
             throw new NotFoundException('Could not find user');
         }
-        /* if (!user) {
-      throw new NotFoundException('Could not find user');
-       } */
-
         return user;
     }
 }

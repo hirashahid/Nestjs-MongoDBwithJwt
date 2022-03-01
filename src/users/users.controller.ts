@@ -1,14 +1,19 @@
-import { Controller, Post, Body, Get, Param, Patch, Delete, Res, Req } from "@nestjs/common";
-import { UsersServices } from "./users.service";
-import { Response, Injectable } from "@nestjs/common";
+import { Controller, Post, Body, Get, Patch, Delete, UseGuards, forwardRef, Inject } from "@nestjs/common";
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import * as bcrypt from 'bcrypt';
 
+import { UsersServices } from "./users.service";
+import { LocalAuthGuard } from "src/auth/local-auth.guard";
+import { LocalStrategy } from "src/auth/local.strategy";
+
 
 @Controller('users')
 export class UsersController extends PassportStrategy(Strategy) {
-    constructor(private readonly usersService: UsersServices) {
+
+    constructor(
+        private readonly usersService: UsersServices,
+        private localStrategy: LocalStrategy) {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
@@ -24,9 +29,7 @@ export class UsersController extends PassportStrategy(Strategy) {
     async addUser(
         @Body('email') userEmail: string,
         @Body('password') userPassword: string,
-        @Res({ passthrough: true }) response: Response
     ) {
-        // insertProduct also returning a promise
         const hashedPassword = await bcrypt.hash(userPassword, 12);
         const generatedId = await this.usersService.insertUser(userEmail, hashedPassword);
         return { id: generatedId };
@@ -37,13 +40,13 @@ export class UsersController extends PassportStrategy(Strategy) {
         return await this.usersService.getUsers();
     }
 
-    @Get('/login/')
+    @UseGuards(LocalAuthGuard)
+    @Get('/login')
     async getUser(
         @Body('email') userEmail: string,
         @Body('password') userPassword: string,
-        @Res({ passthrough: true }) response: Response,) {
-
-        return this.usersService.getSingleUser(userEmail, userPassword, response);
+    ) {
+        return await this.usersService.findUser(userEmail, userPassword);
     }
 
     @Patch()
