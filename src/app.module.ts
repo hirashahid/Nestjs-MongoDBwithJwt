@@ -11,7 +11,7 @@ import { UsersModule } from './users/users.module';
   imports: [
     ProductsModule,
     UsersModule,
-    MongooseModule.forRoot('mongodb+srv://hirashahid:7M5lPGcuQdWPTYHb@cluster0.g9eup.mongodb.net/NestDatabase?retryWrites=true&w=majority'),
+    MongooseModule.forRoot('mongodb+srv://hira:CbqJtNi9NvbRNcMl@cluster0.pwsom.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'),
     JwtModule.register(
       {
         secret: 'secret',
