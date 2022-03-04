@@ -4,6 +4,9 @@ import { MongooseModule } from '@nestjs/mongoose';
 
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
+import { JwtStrategy } from './auth/jwt.strategy';
+import { LocalStrategy } from './auth/local.strategy';
 import { ProductsModule } from './products/products.module';
 import { UsersModule } from './users/users.module';
 
@@ -11,15 +14,10 @@ import { UsersModule } from './users/users.module';
   imports: [
     ProductsModule,
     UsersModule,
-    MongooseModule.forRoot('mongodb+srv://hira:CbqJtNi9NvbRNcMl@cluster0.pwsom.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'),
-    JwtModule.register(
-      {
-        secret: 'secret',
-        signOptions: { expiresIn: '1d' }
-      }
-    )
+    AuthModule,
+    MongooseModule.forRoot('mongodb+srv://hira:CQf61hLUgTsmHASx@cluster0.pwsom.mongodb.net/myFirstDatabase?retryWrites=true&w=majority')
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, LocalStrategy, JwtStrategy],
 })
 export class AppModule { }

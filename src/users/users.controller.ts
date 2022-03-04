@@ -1,32 +1,21 @@
-import { Controller, Post, Body, Get, Param, Patch, Delete, Res, Req } from "@nestjs/common";
-import { UsersServices } from "./users.service";
-import { Response, Injectable } from "@nestjs/common";
-import { ExtractJwt, Strategy } from 'passport-jwt';
-import { PassportStrategy } from '@nestjs/passport';
+import { Controller, Post, Body, Get, Patch, Delete, Request, UseGuards } from "@nestjs/common";
 import * as bcrypt from 'bcrypt';
+
+import { LocalAuthGuard } from "src/auth/local-auth.guard";
+import { UsersServices } from "./users.service";
+import { AuthService } from "src/auth/auth.service";
+import { JwtAuthGuard } from "src/auth/jwt-auth.guard";
 
 
 @Controller('users')
-export class UsersController extends PassportStrategy(Strategy) {
-    constructor(private readonly usersService: UsersServices) {
-        super({
-            jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-            ignoreExpiration: false,
-            secretOrKey: 'secret',
-        });
-    }
+export class UsersController {
+    constructor(private readonly usersService: UsersServices, private authService: AuthService) { }
 
-    async validate(payload: any) {
-        return { userId: payload.sub, username: payload.username };
-    }
-
-    @Post('register')
+    @Post('/register')
     async addUser(
         @Body('email') userEmail: string,
         @Body('password') userPassword: string,
-        @Res({ passthrough: true }) response: Response
     ) {
-        // insertProduct also returning a promise
         const hashedPassword = await bcrypt.hash(userPassword, 12);
         const generatedId = await this.usersService.insertUser(userEmail, hashedPassword);
         return { id: generatedId };
@@ -37,13 +26,18 @@ export class UsersController extends PassportStrategy(Strategy) {
         return await this.usersService.getUsers();
     }
 
-    @Get('/login/')
-    async getUser(
-        @Body('email') userEmail: string,
-        @Body('password') userPassword: string,
-        @Res({ passthrough: true }) response: Response,) {
+    @UseGuards(LocalAuthGuard)
+    @Post('auth/login')
+    async login(@Request() req) {
+        console.log(req.body)
+        return this.authService.login(req.body);
+    }
 
-        return this.usersService.getSingleUser(userEmail, userPassword, response);
+
+    @UseGuards(JwtAuthGuard)
+    @Get('profile')
+    getProfile(@Request() req) {
+        return `hello: ${req.user.email}`;
     }
 
     @Patch()

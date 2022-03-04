@@ -4,15 +4,11 @@ import { InjectModel } from "@nestjs/mongoose";
 import { Model } from 'mongoose'
 import { User } from "./user.model";
 
-
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { access } from "fs";
 
 @Injectable()
 export class UsersServices {
-    private users: User[] = [];
-
     constructor(
         @InjectModel('User') private readonly userModel: Model<User>,
         private jwtService: JwtService,
@@ -25,12 +21,9 @@ export class UsersServices {
         });
         const user = await newUser.save();
         return user.id as string;
-
     }
 
     async getUsers(): Promise<any> {
-        //find() use to find the data
-        //exec(), gives a real promise
         const users = await this.userModel.find().exec();
         return users.map((user) => ({
             id: user.id,
@@ -38,28 +31,16 @@ export class UsersServices {
             password: user.password,
         }));
     }
-
-    async getSingleUser(email: string, password: string, response: Response) {
-        const user = await this.findUser(email, password);
-        //const jwt = await this.jwtService.signAsync({ id: user.id });
-        const payload = { email: user.email, sub: user.id };
-        return {
-            id: user.id,
-            email: user.email,
-            access_token: this.jwtService.sign(payload),
+    async deleteUser(userEmail: string) {
+        const result = await this.userModel.deleteOne({ email: userEmail }).exec();
+        if (result.deletedCount === 0) {
+            throw new NotFoundException('Could not find user');
         }
     }
 
     async updateUser(userEmail: string, password: string) {
         const updatedUser = await this.updateSingleUser(userEmail, password);
         updatedUser.save();
-    }
-
-    async deleteUser(userEmail: string) {
-        const result = await this.userModel.deleteOne({ email: userEmail }).exec();
-        if (result.deletedCount === 0) {
-            throw new NotFoundException('Could not find user');
-        }
     }
 
     private async updateSingleUser(email: string, password: string): Promise<User> {
@@ -79,8 +60,8 @@ export class UsersServices {
         return user;
     }
 
-
-    private async findUser(email: string, password: string): Promise<User> {
+    async findUser(email: string, password: string): Promise<User | undefined> {
+        console.log('at user');
         let user;
         try {
             user = await this.userModel.findOne({ email }).exec();
@@ -93,7 +74,6 @@ export class UsersServices {
         if (!user) {
             throw new NotFoundException('Could not find user');
         }
-
         return user;
     }
 }
