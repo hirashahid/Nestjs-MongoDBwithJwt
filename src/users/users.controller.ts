@@ -21,18 +21,18 @@ export class UsersController {
         return { id: generatedId };
     }
 
-    @Get()
-    async getAllUsers() {
-        return await this.usersService.getUsers();
-    }
-
     @UseGuards(LocalAuthGuard)
     @Post('auth/login')
     async login(@Request() req) {
         console.log(req.body)
         return this.authService.login(req.body);
     }
-
+    
+    @UseGuards(JwtAuthGuard)
+    @Get()
+    async getAllUsers() {
+        return await this.usersService.getUsers();
+    }
 
     @UseGuards(JwtAuthGuard)
     @Get('profile')
@@ -40,6 +40,7 @@ export class UsersController {
         return `hello: ${req.user.email}`;
     }
 
+    @UseGuards(JwtAuthGuard)
     @Patch()
     async updateUser(
         @Body('email') userEmail: string,
@@ -49,6 +50,7 @@ export class UsersController {
         return null;
     }
 
+    @UseGuards(JwtAuthGuard)
     @Delete()
     async deleteProduct(@Body('email') userEmail: string,) {
         await this.usersService.deleteUser(userEmail);
